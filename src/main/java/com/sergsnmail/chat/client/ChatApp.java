@@ -7,16 +7,14 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 
 public class ChatApp extends Application {
 
     @Override
     public void start(Stage primaryStage) throws Exception {
         Network network = Network.getInstance();
-        Parent root = FXMLLoader.load(getClass().getResource("chat.fxml"));
-        primaryStage.setScene(new Scene(root));
-        primaryStage.setTitle("Чат");
-        primaryStage.setResizable(false);
+        new ChatController(primaryStage).Login();
         primaryStage.show();
         primaryStage.setOnCloseRequest(request -> {
             try {

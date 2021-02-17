@@ -19,7 +19,6 @@ public class Server {
                 Socket socket = server.accept(); // get connection
                 System.out.println("[DEBUG] client accepted");
                 ClientHandler handler = new ClientHandler(socket, this);
-                addClient(handler);
                 new Thread(handler).start();
             }
         } catch (Exception e) {

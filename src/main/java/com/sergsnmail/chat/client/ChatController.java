@@ -1,80 +1,66 @@
 package com.sergsnmail.chat.client;
 
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.layout.StackPane;
+import javafx.stage.Stage;
+
 import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
 
-import javafx.application.Platform;
-import javafx.event.ActionEvent;
-import javafx.fxml.FXML;
-import javafx.fxml.Initializable;
-import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
+public class ChatController {
 
-public class ChatController implements Initializable {
+    private Stage pStage;
+    private Scene pScene;
+    //private Network network;
 
-    @FXML
-    private TextArea output;
-
-    @FXML
-    private TextField input;
-
-    private Network network;
-
-    @Override
-    public void initialize(URL location, ResourceBundle resources) {
-
-        network = Network.getInstance();
-
-        new Thread(() -> {
-            try {
-                while (true) {
-                    String message = network.readMessage();
-                    if (message.equals("/quit")) {
-                        network.close();
-                        break;
-                    }
-                    Platform.runLater(() -> appendMessage(message));
-                }
-            } catch (IOException ioException) {
-                System.err.println("Server was broken");
-                Platform.runLater(() -> appendMessage("Server was broken"));
-                try {
-                    network.close();
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            }
-        }).start();
-
+    public ChatController(Stage primaryStage) {
+        pStage = primaryStage;
+        pScene = new Scene(new StackPane());
+        //network = Network.getInstance();
+        //pStage.setScene(pScene);
     }
 
-    private void sendMessageToServer(String message) {
-        if (!message.equals("")) {
-            try {
-                network.writeMessage(input.getText());
-            } catch (IOException e) {
-                appendMessage("Server was broken");
-            }
-            input.clear();
-        }
+    public void Login() throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("loginForm.fxml"));
+        //pScene.setRoot((Parent) loader.load());
+        pStage.setScene(new Scene((Parent) loader.load()));
+        //scene.setRoot((Parent) loader.load());
+        LoginFormController controller = loader.<LoginFormController>getController();
+        controller.init(this);
+
+        //primaryStage.initStyle(StageStyle.UNDECORATED);
+        //Parent root = FXMLLoader.load(getClass().getResource("chatForm.fxml"));
+        //Parent root = FXMLLoader.load(getClass().getResource("loginForm.fxml"));
+        //primaryStage.setScene(new Scene((Parent) loader.load()));
+
+        //        primaryStage.setTitle("Чат");
+        pStage.setResizable(false);
     }
 
-    public void appendMessage(String message) {
-        if (!message.equals("")) {
-            output.appendText(message + "\n");
-        }
+    public void authorisation(String username) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("chatForm.fxml"));
+        //pScene.setRoot((Parent) loader.load());
+        pStage.setScene(new Scene((Parent) loader.load()));
+        //scene.setRoot((Parent) loader.load());
+        ChatFormController controller = loader.<ChatFormController>getController();
+        controller.init(this);
+
+        //primaryStage.initStyle(StageStyle.TRANSPARENT);
+        //Parent root = FXMLLoader.load(getClass().getResource("chatForm.fxml"));
+        //Parent root = FXMLLoader.load(getClass().getResource("loginForm.fxml"));
+        //primaryStage.setScene(new Scene((Parent) loader.load()));
+
+        //        primaryStage.setTitle("Чат");
+        //primaryStage.initStyle(StageStyle.DECORATED);
+        //primaryStage.setResizable(false);
     }
 
-    public void sendMessage(ActionEvent actionEvent) {
-        sendMessageToServer(input.getText());
+    public void close() {
+        pStage.close();
     }
 
-    public void keyListener(KeyEvent keyEvent) {
-        if (keyEvent.getCode() == KeyCode.ENTER) {
-            sendMessageToServer(input.getText());
-        }
+    public void setTitle(String title){
+        pStage.setTitle(title);
     }
 }
