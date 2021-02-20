@@ -1,5 +1,7 @@
 package com.sergsnmail.chat.server;
 
+import com.sergsnmail.chat.server.services.history.FileHistory;
+import com.sergsnmail.chat.server.services.history.HistoryService;
 import com.sergsnmail.chat.server.services.userinfo.UserInfoDBStorage;
 import com.sergsnmail.chat.server.services.userinfo.UserInfoService;
 
@@ -7,6 +9,7 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.util.List;
 import java.util.NoSuchElementException;
 
 public class ClientHandler implements Runnable {
@@ -21,6 +24,12 @@ public class ClientHandler implements Runnable {
      * Сервисный класс для работы с UserInfo
      */
     private UserInfoService userInfoService;
+
+    /**
+     * Сервисный класс для работы с историей собщений
+     */
+    private HistoryService historyService;
+
 
     public String getNickName() {
         return userInfo.getNickname();
@@ -41,8 +50,8 @@ public class ClientHandler implements Runnable {
         try {
             System.out.println("[DEBUG] client handler start processing");
 
-            out = new DataOutputStream(socket.getOutputStream());
-            in = new DataInputStream(socket.getInputStream());
+            out = new DataOutputStream(socket.getOutputStream()); // к клиенту
+            in = new DataInputStream(socket.getInputStream()); // от клиента
 
             /**
              * Создаем экземпляр UserInfoService и передаем ему хранилище, работающее с БД
@@ -88,6 +97,8 @@ public class ClientHandler implements Runnable {
                     changeNicknameCommand(msg);
                 } else if (msg.startsWith("/get_nickname")) {
                     getNicknameCommand();
+                } else if (msg.startsWith("/history")) {
+                    sendHistory();
                 } else { // broadcast message
                     server.broadCastMessage(userInfo.getNickname() + ": " + msg);
                     System.out.println("[DEBUG] broadcasting message from client: " + msg);
@@ -112,11 +123,23 @@ public class ClientHandler implements Runnable {
         return msgArgs;
     }
 
+    private void sendHistory() throws IOException {
+        List<String> history = historyService.get(100);
+        if (history != null) {
+            for (String historyMsg : history) {
+                sendHistory(historyMsg);
+            }
+        }
+    }
+
     private boolean authenticateCommand(String message) throws IOException {
         String[] msgArgs = message.split(" ", 3); // msgArgs[1] - login, msgArgs[2] - plain password
         boolean authResult = false;
         if (userInfoService.hasUserInfo(msgArgs[1], msgArgs[2])) {
             userInfo = userInfoService.getUserInfo(msgArgs[1]);
+
+            historyService = new HistoryService(new FileHistory(userInfo.getUsername()));
+
             server.addClient(this);
             out.writeUTF("/auth ok");
             System.out.println(String.format("[DEBUG] client %s authentication successful", userInfo.getNickname()));
@@ -152,8 +175,14 @@ public class ClientHandler implements Runnable {
         out.writeUTF("/nickname" + " " + userInfo.getNickname());
     }
 
+    public void sendHistory(String message) throws IOException {
+        out.writeUTF(message);
+        out.flush();
+    }
+
     public void sendMessage(String message) throws IOException {
         out.writeUTF(message);
         out.flush();
+        historyService.add(message);
     }
 }

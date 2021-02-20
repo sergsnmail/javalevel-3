@@ -31,6 +31,7 @@ public class ChatFormController implements Initializable {
         Thread server = new Thread(() -> {
             try {
                 network.writeMessage("/get_nickname");
+                network.writeMessage("/history");
                 while (true) {
                     String message = network.readMessage();
                     if (message.equals("/quit")) {
