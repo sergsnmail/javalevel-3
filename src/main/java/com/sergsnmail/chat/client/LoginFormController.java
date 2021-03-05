@@ -3,6 +3,7 @@ package com.sergsnmail.chat.client;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
@@ -16,6 +17,7 @@ public class LoginFormController implements Initializable {
 
     public TextField username;
     public PasswordField password;
+    public Label errorMessage;
     private ChatController controller;
     private Network network;
 
@@ -87,9 +89,13 @@ public class LoginFormController implements Initializable {
     private void clearInput(){
         username.clear();
         password.clear();
+        errorMessage.setVisible(true);
     }
 
     public void onRegisterButton(ActionEvent actionEvent) throws IOException {
         network.writeMessage("/reg " + username.getText() + " " + password.getText());
+    }
+
+    public void onForgotButton(ActionEvent actionEvent) {
     }
 }

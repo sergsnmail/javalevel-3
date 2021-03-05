@@ -1,4 +1,8 @@
 package com.sergsnmail.chat.server;
+
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -7,6 +11,7 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 
 public class Server {
 
+    private static final Logger LOGGER = LogManager.getLogger(Server.class);
     private static final int DEFAULT_PORT = 8189;
 
     private ConcurrentLinkedDeque<ClientHandler> clients;
@@ -14,26 +19,26 @@ public class Server {
     public Server(int port) {
         clients = new ConcurrentLinkedDeque<>();
         try (ServerSocket server = new ServerSocket(port)) {
-            System.out.println("[DEBUG] server started on port: " + port);
+            LOGGER.info("Server started on port: " + port);
             while (true) {
                 Socket socket = server.accept(); // get connection
-                System.out.println("[DEBUG] client accepted");
+                LOGGER.info("Client accepted");
                 ClientHandler handler = new ClientHandler(socket, this);
                 new Thread(handler).start();
             }
         } catch (Exception e) {
-            System.err.println("Server was broken");
+            LOGGER.fatal("Server was broken");
         }
     }
 
     public void addClient(ClientHandler clientHandler) {
         clients.add(clientHandler);
-        System.out.println("[DEBUG] client added to broadcast queue");
+        LOGGER.info(String.format("Client \'%s\' added to broadcast queue",clientHandler.getSessionId()));
     }
 
     public void removeClient(ClientHandler clientHandler) {
         clients.remove(clientHandler);
-        System.out.println("[DEBUG] client removed from broadcast queue");
+        LOGGER.info(String.format("Client \'%s\' removed from broadcast queue",clientHandler.getSessionId()));
     }
 
     public void broadCastMessage(String msg) throws IOException {

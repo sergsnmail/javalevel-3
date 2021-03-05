@@ -5,9 +5,9 @@
 <?import javafx.scene.layout.*?>
 <?import javafx.scene.text.*?>
 
-<AnchorPane onKeyPressed="#keyListener" prefHeight="370.0" prefWidth="350.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sergsnmail.chat.client.LoginFormController">
+<AnchorPane onKeyPressed="#keyListener" prefHeight="514.0" prefWidth="350.0" style="-fx-background-color: #ffffff;" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sergsnmail.chat.client.LoginFormController">
    <children>
-      <AnchorPane layoutX="-1.0" prefHeight="154.0" prefWidth="350.0" style="-fx-background-color: #69c0ff;" AnchorPane.bottomAnchor="339.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+      <AnchorPane layoutX="-1.0" prefHeight="154.0" prefWidth="350.0" style="-fx-background-color: #69c0ff;" AnchorPane.bottomAnchor="371.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
          <children>
             <ImageView fitHeight="161.0" fitWidth="230.0" layoutX="61.0" pickOnBounds="true" preserveRatio="true">
                <image>
@@ -18,7 +18,7 @@
          </children></AnchorPane>
       <VBox layoutY="168.0" prefHeight="320.0" prefWidth="350.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="154.0">
          <children>
-            <AnchorPane prefHeight="202.0" prefWidth="350.0">
+            <AnchorPane prefHeight="219.0" prefWidth="350.0">
                <children>
                   <TextField fx:id="username" layoutX="50.0" layoutY="53.0" prefHeight="40.0" prefWidth="250.0" promptText="Username" style="-fx-border-color: #69c0ff; -fx-border-radius: 20; -fx-background-insets: 0; -fx-background-color: #ffffff;">
                      <font>
@@ -38,19 +38,26 @@
                      <font>
                         <Font size="14.0" />
                      </font></PasswordField>
+                  <Label fx:id="errorMessage" layoutX="100.0" layoutY="189.0" prefHeight="14.0" prefWidth="150.0" text="Invalid username or password" textFill="RED" visible="false" />
                   
                </children>
             </AnchorPane>
-            <AnchorPane prefHeight="140.0" prefWidth="350.0">
+            <AnchorPane prefHeight="157.0" prefWidth="350.0">
                <children>
-                  <Button fx:id="loginButton" layoutX="100.0" layoutY="10.0" mnemonicParsing="false" onAction="#onLoginButton" prefHeight="40.0" prefWidth="150.0" style="-fx-background-color: #69c0ff; -fx-background-radius: 20;" text="Login" textFill="WHITE">
+                  <Button fx:id="loginButton" layoutX="51.0" layoutY="10.0" mnemonicParsing="false" onAction="#onLoginButton" prefHeight="40.0" prefWidth="250.0" style="-fx-background-color: #69c0ff; -fx-background-radius: 20;" text="Log In" textFill="WHITE">
                      <font>
                         <Font size="16.0" />
                      </font>
                   </Button>
-                  <Button fx:id="registerButton" layoutX="100.0" layoutY="65.0" mnemonicParsing="false" onAction="#onRegisterButton" prefHeight="40.0" prefWidth="150.0" style="-fx-background-color: #69c0ff; -fx-background-radius: 20;" text="Registration" textFill="WHITE">
+                  <Button fx:id="registerButton" layoutX="51.0" layoutY="64.0" mnemonicParsing="false" onAction="#onRegisterButton" prefHeight="29.0" prefWidth="110.0" style="-fx-background-color: #69c0ff; -fx-background-radius: 20;" text="Sign Up" textFill="WHITE">
                      <font>
-                        <Font size="16.0" />
+                        <Font size="12.0" />
+                     </font>
+                  </Button>
+
+                  <Button fx:id="forgotButton" layoutX="191.0" layoutY="64.0" mnemonicParsing="false" onAction="#onForgotButton" prefHeight="29.0" prefWidth="110.0" style="-fx-background-color: #69c0ff; -fx-background-radius: 20;" text="Forgot password" textFill="WHITE">
+                     <font>
+                        <Font size="12.0" />
                      </font>
                   </Button>
 

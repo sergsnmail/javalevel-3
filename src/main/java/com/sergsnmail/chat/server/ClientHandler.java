@@ -5,6 +5,10 @@ import com.sergsnmail.chat.server.services.history.HistoryService;
 import com.sergsnmail.chat.server.services.userinfo.UserInfoDBStorage;
 import com.sergsnmail.chat.server.services.userinfo.UserInfoService;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.ThreadContext;
+
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
@@ -14,41 +18,36 @@ import java.util.NoSuchElementException;
 
 public class ClientHandler implements Runnable {
 
+    private static final Logger LOGGER = LogManager.getLogger("ClientLogger");
+    private final String ANONYMOUS_USER = "Anonymous";
+    private final String SESSION_NAME = "session";
+
     private Socket socket;
     private Server server;
     private DataInputStream in;
     private DataOutputStream out;
     private UserInfo userInfo;
 
-    /**
-     * Сервисный класс для работы с UserInfo
-     */
     private UserInfoService userInfoService;
-
-    /**
-     * Сервисный класс для работы с историей собщений
-     */
     private HistoryService historyService;
 
-
-    public String getNickName() {
-        return userInfo.getNickname();
-    }
-
-    private String nickName;
+    private String sessionId;
     private static int cnt = 0;
 
     public ClientHandler(Socket socket, Server server) {
         this.socket = socket;
         this.server = server;
         cnt++;
-        nickName = "user" + cnt;
+        sessionId = SESSION_NAME + "-" + cnt;
+        userInfo = new UserInfo();
+        userInfo.setUsername(ANONYMOUS_USER);
     }
 
     @Override
     public void run() {
         try {
-            System.out.println("[DEBUG] client handler start processing");
+            ThreadContext.put("USERNAME", sessionId);
+            LOGGER.info("Client handler start processing");
 
             out = new DataOutputStream(socket.getOutputStream()); // к клиенту
             in = new DataInputStream(socket.getInputStream()); // от клиента
@@ -61,12 +60,11 @@ public class ClientHandler implements Runnable {
             /*
              * Authenticate
              */
-            System.out.println(String.format("[DEBUG] client %s waiting authentication", nickName));
+            LOGGER.info(String.format("Client \'%s\' waiting authentication", userInfo.getUsername()));
             String msg;
             boolean isAuthenticated = false;
             while (!isAuthenticated) {
                 msg = in.readUTF();
-                System.out.println("[DEBUG] Authentication message from client: " + msg);
                 if (msg.equals("/quit")) {
                     out.writeUTF(msg);
                 } else if (msg.startsWith("/auth")) { // Аутентификация пользователя
@@ -74,7 +72,7 @@ public class ClientHandler implements Runnable {
                 } else if (msg.startsWith("/reg")) { // Регистрация нового пользователя
                     registrationCommand(msg);
                 } else {
-                    System.err.println(String.format("[DEBUG] client %s was sent wrong authentication message", userInfo.getNickname()));
+                    LOGGER.info(String.format("Client \'%s\' was sent wrong authentication message", userInfo.getNickname()));
                 }
             }
 
@@ -83,15 +81,17 @@ public class ClientHandler implements Runnable {
              */
             while (isAuthenticated) {
                 msg = in.readUTF();
-                System.out.println("[DEBUG] message from client: " + msg);
+                LOGGER.info("Message from client: " + msg);
                 if (msg.equals("/quit")) {
                     out.writeUTF(msg);
                 } else if (msg.startsWith("/w")) { // send private message
-                    String[] msgArgs = parsePrivate(msg);
+                    String[] msgArgs = parsePrivateMessageString(msg);
                     try {
-                        server.sendMessageTo(msgArgs[1], userInfo.getNickname() + ": (private) " + msgArgs[2]);
+                        String message = userInfo.getNickname() + ": (private) " + msgArgs[2];
+                        server.sendMessageTo(msgArgs[1], message);
+                        sendMessage(message);
                     } catch (NoSuchElementException e) {
-                        sendMessage(String.format("User with nickname \'%s\' is not connected", msgArgs[1]));
+                        sendMessage(String.format("Server message: User with nickname \'%s\' is not connected", msgArgs[1]));
                     }
                 } else if (msg.startsWith("/new_nickname")) {
                     changeNicknameCommand(msg);
@@ -101,13 +101,14 @@ public class ClientHandler implements Runnable {
                     sendHistory();
                 } else { // broadcast message
                     server.broadCastMessage(userInfo.getNickname() + ": " + msg);
-                    System.out.println("[DEBUG] broadcasting message from client: " + msg);
+                    LOGGER.info("Broadcasting message from client: " + msg);
                 }
             }
         } catch (Exception e) {
-            System.err.println("Handled connection was broken");
+            LOGGER.fatal("Handled connection was broken");
             server.removeClient(this);
         }
+        ThreadContext.clearAll();
     }
 
     /**
@@ -118,7 +119,7 @@ public class ClientHandler implements Runnable {
      * String[1] = nick_name
      * String[2] = message text
      */
-    private String[] parsePrivate(String message) {
+    private String[] parsePrivateMessageString(String message) {
         String[] msgArgs = message.split(" ", 3);
         return msgArgs;
     }
@@ -133,32 +134,36 @@ public class ClientHandler implements Runnable {
     }
 
     private boolean authenticateCommand(String message) throws IOException {
+        LOGGER.info(String.format("Authentication message from client: %s", message));
         String[] msgArgs = message.split(" ", 3); // msgArgs[1] - login, msgArgs[2] - plain password
         boolean authResult = false;
         if (userInfoService.hasUserInfo(msgArgs[1], msgArgs[2])) {
+            LOGGER.info(String.format("Client \'%s\' authentication successful", msgArgs[1]));
+
             userInfo = userInfoService.getUserInfo(msgArgs[1]);
+            LOGGER.info("Load client info successful");
 
             historyService = new HistoryService(new FileHistory(userInfo.getUsername()));
+            LOGGER.info("Load client history successful");
 
             server.addClient(this);
             out.writeUTF("/auth ok");
-            System.out.println(String.format("[DEBUG] client %s authentication successful", userInfo.getNickname()));
             authResult = true;
         } else {
             out.writeUTF("/auth failed");
-            System.out.println(String.format("[DEBUG] client %s authentication failed", nickName));
+            LOGGER.info(String.format("Client \'%s\' authentication failed", msgArgs[1]));
         }
         return authResult;
     }
 
     private void registrationCommand(String message) throws IOException {
+        LOGGER.info(String.format("Registration message from client: %s", message));
         String[] msgArgs = message.split(" ", 3); // msgArgs[1] - username, msgArgs[2] - plain password
-        userInfo = new UserInfo();
         userInfo.setUsername(msgArgs[1]);
-        userInfo.setNickname(nickName);
+        userInfo.setNickname(msgArgs[1]);
         if (userInfoService.addUserInfo(userInfo, msgArgs[2])) {
             out.writeUTF("/reg ok");
-            System.out.println(String.format("[DEBUG] client %s registered successful", userInfo.getNickname()));
+            LOGGER.info(String.format("Client \'%s\' with nickname \'%s\' registered successful", msgArgs[1], msgArgs[1]));
         }
     }
 
@@ -167,7 +172,7 @@ public class ClientHandler implements Runnable {
         userInfo.setNickname(msgArgs[1]);
         if (userInfoService.updateUserInfo(userInfo)) {
             getNicknameCommand();
-            System.out.println(String.format("[DEBUG] client %s changed nickname", userInfo.getNickname()));
+            LOGGER.info(String.format("Client \'%s\' changed nickname to \'%s\'", userInfo.getUsername(), userInfo.getNickname()));
         }
     }
 
@@ -184,5 +189,13 @@ public class ClientHandler implements Runnable {
         out.writeUTF(message);
         out.flush();
         historyService.add(message);
+    }
+
+    public String getNickName() {
+        return userInfo.getNickname();
+    }
+
+    public String getSessionId() {
+        return sessionId;
     }
 }

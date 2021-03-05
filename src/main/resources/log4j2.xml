@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Configuration status="INFO">
+    <Properties>
+        <Property name="basePath">logs</Property>
+        <Property name="LOG_PATTERN">[%-5level] %d{yyyy-MM-dd HH:mm:ss.SSS} [%t] %c{1} - %msg%n</Property>
+    </Properties>
+    <Appenders>
+        <Console name="console" target="SYSTEM_OUT">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </Console>
+        <File name="FILE" fileName="${basePath}/server.log" append="true">
+            <PatternLayout pattern="${LOG_PATTERN}"/>
+        </File>
+        <Routing name="client">
+            <Routes pattern="$${ctx:USERNAME}">
+                <Route>
+                    <File name="Rolling-${ctx:USERNAME}" fileName="${basePath}/${ctx:USERNAME}-client.log" append="true">
+                        <PatternLayout pattern="${LOG_PATTERN}"/>
+                    </File>
+                </Route>
+            </Routes>
+        </Routing>
+    </Appenders>
+    <Loggers>
+        <Root level="info" additivity="false">
+            <AppenderRef ref="console"/>
+            <AppenderRef ref="FILE"/>
+        </Root>
+        <Logger name="ClientLogger" level="info" additivity="false">
+            <AppenderRef ref="client"/>
+        </Logger>
+    </Loggers>
+</Configuration>
