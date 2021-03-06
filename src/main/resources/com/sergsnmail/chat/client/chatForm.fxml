@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<AnchorPane onKeyPressed="#keyListener" prefHeight="300.0" prefWidth="500.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.sergsnmail.chat.client.ChatFormController">
+    <children>
+        <TextArea fx:id="output" editable="false" focusTraversable="false" layoutX="14.0" layoutY="14.0" mouseTransparent="true" prefHeight="333.0" prefWidth="576.0" AnchorPane.bottomAnchor="50.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="14.0" AnchorPane.topAnchor="14.0" />
+        <TextField fx:id="input" layoutX="14.0" layoutY="364.0" prefHeight="22.0" prefWidth="364.0" AnchorPane.bottomAnchor="14.0" AnchorPane.leftAnchor="14.0" AnchorPane.rightAnchor="115.0" />
+        <Button layoutX="537.0" layoutY="364.0" mnemonicParsing="false" onAction="#sendMessage" text="Send message" AnchorPane.bottomAnchor="14.0" AnchorPane.rightAnchor="14.0" />
+    </children>
+</AnchorPane>
